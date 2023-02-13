@@ -1,21 +1,44 @@
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 import "react-quill/dist/quill.snow.css";
 
-const QuillWrapper = dynamic(() => import("react-quill"), {
+const ReactQuill = dynamic(() => import("react-quill"), {
   ssr: false,
 });
 
+const formats = [
+  "header",
+  "font",
+  "size",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "blockquote",
+  "list",
+  "bullet",
+  "indent",
+  "link",
+  "image",
+  "video",
+];
+
 const PublishPost = () => {
-  const [value, setValue] = useState("");
+  const { register, handleSubmit, watch } = useForm();
+
+  const handlePublish = () => {
+    console.log(watch());
+  };
+
   return (
     <div>
       <h1>등록페이지</h1>
-      <form>
+      <form onSubmit={handleSubmit(handlePublish)}>
         <div>
           <input type="text" />
-          <QuillWrapper theme="snow" value={value} onChange={setValue} />
+          <ReactQuill theme="snow" onChange={(e) => console.log(e)} />
         </div>
+        <button>등록</button>
       </form>
     </div>
   );
