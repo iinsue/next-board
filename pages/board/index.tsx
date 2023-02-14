@@ -1,22 +1,8 @@
 import Link from "next/link";
-import AWS from "aws-sdk";
 import { useState } from "react";
 import { imageUpload } from "@/util/imageUpload";
 import { useRecoilState } from "recoil";
 import { boardImage } from "@/components/atom";
-
-const BUCKET = "boardtest-ssu";
-const REGION = "ap-northeast-2";
-
-AWS.config.update({
-  accessKeyId: process.env.ACCESS_KEY,
-  secretAccessKey: process.env.SECRET_KEY,
-});
-
-const myBucket = new AWS.S3({
-  params: { Bucket: BUCKET },
-  region: REGION,
-});
 
 const BoardList = () => {
   const [progress, setProgress] = useState(0);

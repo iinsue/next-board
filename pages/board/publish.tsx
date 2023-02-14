@@ -1,11 +1,18 @@
 import dynamic from "next/dynamic";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import "react-quill/dist/quill.snow.css";
+import { imageUpload } from "@/util/imageUpload";
 
-const ReactQuill = dynamic(() => import("react-quill"), {
-  ssr: false,
-});
+const ReactQuill = dynamic(
+  async () => {
+    const { default: RQ } = await import("react-quill");
+    return function comp({ forwardedRef, ...props }) {
+      return <RQ ref={forwardedRef} {...props} />;
+    };
+  },
+  { ssr: false }
+);
 
 const formats = [
   "header",
@@ -26,6 +33,7 @@ const formats = [
 
 const PublishPost = () => {
   const { register, handleSubmit, watch } = useForm();
+  const quillRef = useRef();
 
   const handlePublish = () => {
     console.log(watch());
@@ -42,6 +50,12 @@ const PublishPost = () => {
 
     input.onchange = async () => {
       const [file] = input.files;
+      const imageURL = await imageUpload(file);
+      console.log(imageURL);
+      const range = quillRef.current.getEditorSelection();
+      quillRef.current.getEditor().insertEmbed(range.index, "image", imageURL);
+      quillRef.current.getEditor().setSelection(range.index + 1);
+      document.body.querySelector(":scope > input").remove();
     };
   };
 
@@ -72,7 +86,11 @@ const PublishPost = () => {
       <form onSubmit={handleSubmit(handlePublish)}>
         <div>
           <input type="text" />
-          <ReactQuill theme="snow" modules={modules} formats={formats} />
+          <ReactQuill
+            forwardedRef={quillRef}
+            modules={modules}
+            formats={formats}
+          />
         </div>
         <button>등록</button>
       </form>
