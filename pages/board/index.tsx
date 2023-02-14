@@ -1,6 +1,9 @@
 import Link from "next/link";
 import AWS from "aws-sdk";
 import { useState } from "react";
+import { imageUpload } from "@/util/imageUpload";
+import { useRecoilState } from "recoil";
+import { boardImage } from "@/components/atom";
 
 const BUCKET = "boardtest-ssu";
 const REGION = "ap-northeast-2";
@@ -18,22 +21,14 @@ const myBucket = new AWS.S3({
 const BoardList = () => {
   const [progress, setProgress] = useState(0);
   const [selectedFile, setSeletedFile] = useState(null);
-  const [imageUrl, setImageUrl] = useState(null);
+  const [imageUrl, setImageUrl] = useRecoilState(boardImage);
 
   const handleFileInput = (e) => {
     setSeletedFile(e.target.files[0]);
   };
 
   const uploadFile = async () => {
-    const params = {
-      Body: selectedFile,
-      Bucket: BUCKET,
-      Key: selectedFile.name,
-    };
-
-    const { Location } = await myBucket.upload(params).promise();
-    setImageUrl(Location);
-    console.log("upload to s3", Location);
+    await imageUpload(selectedFile).then((res) => console.log(res));
   };
 
   return (

@@ -10,6 +10,7 @@ const nextConfig = {
   env: {
     ACCESS_KEY: ACCESS_KEY,
     SECRET_KEY: SECRET_KEY,
+    RECOIL_DUPLICATE_ATOM_KEY_CHECKING_ENABLED: "false",
   },
 };
 
