@@ -1,5 +1,5 @@
 import dynamic from "next/dynamic";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import "react-quill/dist/quill.snow.css";
 import { imageUpload } from "@/util/imageUpload";
@@ -32,11 +32,28 @@ const formats = [
 ];
 
 const PublishPost = () => {
-  const { register, handleSubmit, watch } = useForm();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm();
   const quillRef = useRef();
 
-  const handlePublish = () => {
+  useEffect(() => {
+    register("textContent", { required: true });
+  }, [register]);
+
+  const onEditorStateChange = (editorState) => {
+    setValue("textContent", editorState);
+  };
+
+  const textContent = watch("textContent");
+
+  const handlePublish = (data) => {
     console.log(watch());
+    console.log(data);
   };
 
   const imageHandler = () => {
@@ -85,11 +102,13 @@ const PublishPost = () => {
       <h1>등록페이지</h1>
       <form onSubmit={handleSubmit(handlePublish)}>
         <div>
-          <input type="text" />
+          <input type="text" {...register("title")} />
           <ReactQuill
             forwardedRef={quillRef}
             modules={modules}
             formats={formats}
+            onChange={onEditorStateChange}
+            value={textContent}
           />
         </div>
         <button>등록</button>
