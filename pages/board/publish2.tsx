@@ -8,30 +8,24 @@ const ReactQuill = dynamic(
   async () => {
     const { default: RQ } = await import("react-quill");
     const { default: IR } = await import("quill-image-resize");
-    const { Quill } = RQ;
-    Quill.register("modules/ImageResize", IR);
+    RQ.Quill.register("modules/ImageResize", IR);
     return function comp({ forwardedRef, ...props }) {
-      const modules = {
-        toolbar: [
-          [{ header: [1, 2, false] }],
-          ["bold", "italic", "underline", "strike", "blockquote"],
-          [
-            { list: "ordered" },
-            { list: "bullet" },
-            { indent: "-1" },
-            { indent: "+1" },
-          ],
-          ["link", "image"],
-          ["clean"],
-        ],
-        ImageResize: {
-          parchment: Quill.import("parchment"),
-        },
-      };
-      return <RQ ref={forwardedRef} modules={modules} {...props} />;
+      return <RQ ref={forwardedRef} {...props} />;
     };
   },
   { ssr: false }
+);
+
+const MQuill = dynamic(
+  async () => {
+    const { default: RQ } = await import("react-quill");
+    return function comp({ ...props }) {
+      return <RQ {...props} />;
+    };
+  },
+  {
+    ssr: false,
+  }
 );
 
 const formats = [
@@ -111,10 +105,7 @@ const PublishPost = () => {
           ["link", "image"],
           ["clean"],
         ],
-        handlers: { image: imageHandler },
-        ImageResize: {
-          modules: ["Resize", "DisplaySize", "Toolbar"],
-        },
+        ImageResize: { parchment: MQuill.Quill.import() },
       },
     }),
     []
@@ -128,6 +119,7 @@ const PublishPost = () => {
           <input type="text" {...register("title")} />
           <ReactQuill
             forwardedRef={quillRef}
+            modules={modules}
             formats={formats}
             onChange={onEditorStateChange}
             value={textContent}
