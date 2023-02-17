@@ -1,97 +1,98 @@
-import React, { useEffect, useRef } from "react";
-import S3 from "react-aws-s3";
-
-export const modules = {
-  toolbar: {
-    container: [
-      ["bold", "italic", "underline", "strike"], // toggled buttons
-      ["blockquote", "code-block"],
-
-      [{ list: "ordered" }, { list: "bullet" }],
-      [{ script: "sub" }, { script: "super" }], // superscript/subscript
-      [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
-      [{ direction: "rtl" }], // text direction
-
-      [{ size: ["small", false, "large", "huge"] }], // custom dropdown
-      [{ header: [1, 2, 3, 4, 5, 6, false] }],
-
-      [{ color: [] }, { background: [] }], // dropdown with defaults from theme
-      [{ font: [] }],
-      [{ align: [] }],
-      ["link", "image", "formula"],
-      ["clean"],
-    ],
+import dynamic from "next/dynamic";
+import "react-quill/dist/quill.snow.css";
+import { useMemo, useRef } from "react";
+const ReactQuill = dynamic(
+  async () => {
+    const { default: Quill } = await import("react-quill");
+    return function addprops({ forwardedRef, ...props }) {
+      return <Quill ref={forwardedRef} {...props} />;
+    };
   },
-};
+  {
+    ssr: false,
+  }
+);
 
-function QuillEditor({ QuillChange }) {
-  const Quill = typeof window == "object" ? require("quill") : () => false;
+const formats = [
+  "header",
+  "font",
+  "size",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "blockquote",
+  "list",
+  "bullet",
+  "indent",
+  "link",
+  "image",
+  "video",
+];
 
-  const quillElement = useRef(null);
-  const quillInstance = useRef(null);
+const Editor = () => {
+  const quillRef = useRef();
 
-  const onClickImageBtn = () => {
+  const imageHandler = () => {
     const input = document.createElement("input");
+    const formData = new FormData();
+    let imgUrl = "";
+
     input.setAttribute("type", "file");
     input.setAttribute("accept", "image/*");
     input.click();
-    input.onchange = function () {
-      const file = input.files[0];
-      const fileName = file.name;
 
-      const config = {
-        bucketName: process.env.AWS_BUCKET,
-        region: process.env.AWS_DEFAULT_REGION,
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      };
+    input.onchange = async () => {
+      const file = input.files;
+      console.log(file);
+      //const imageURL = await sendImage(file)
+      if (file !== null) formData.append("image", file[0]);
+      /* console.log(file[0]);
 
-      const ReactS3Client = new S3(config);
-
-      ReactS3Client.uploadFile(file, fileName).then((data) => {
-        if (data.status === 204) {
-          //커서 위치 받아오기 위함.
-          const range = quillInstance.current.getSelection(true);
-          // 1.현재 커서 위치에 2. 이미지를 3.src="" 로 나타냄.
-          quillInstance.current.insertEmbed(
-            range.index,
-            "image",
-            `${data.location}`
+      try {
+        const range = quillRef.current.getEditor().getSelection().index;
+        if (range !== null && range !== undefined) {
+          let quill = quillRef.current?.getEditor();
+          quill?.setSelection(range, 1);
+          quill?.clipboard.dangerouslyPasteHTML(
+            range,
+            `<img src=${imgUrl} alt="이미지 태그가 삽입됩니다." />`
           );
-
-          // 이미지 업로드 후 커서 이미지 한칸 옆으로 이동.
-          quillInstance.current.setSelection(range.index + 1);
-        } else {
-          alert("error");
         }
-      });
+        return { success: true };
+      } catch (error) {
+        console.log(error);
+        return { success: false };
+      } */
     };
   };
 
-  useEffect(() => {
-    if (quillElement.current) {
-      quillInstance.current = new Quill(quillElement.current, {
-        theme: "snow",
-        placeholder: "Please enter the contents.",
-        modules: modules,
-      });
-    }
-
-    const quill = quillInstance.current;
-
-    quill.on("text-change", () => {
-      QuillChange(quill.root.innerHTML);
-    });
-
-    const toolbar = quill.getModule("toolbar");
-    toolbar.addHandler("image", onClickImageBtn);
-  }, []);
+  const modules = useMemo(
+    () => ({
+      toolbar: {
+        container: [
+          [{ header: [1, 2, false] }],
+          ["bold", "italic", "underline", "strike", "blockquote"],
+          [
+            { list: "ordered" },
+            { list: "bullet" },
+            { indent: "-1" },
+            { indent: "+1" },
+          ],
+          ["link", "image"],
+          ["clean"],
+        ],
+      },
+      handlers: {
+        image: imageHandler,
+      },
+    }),
+    []
+  );
 
   return (
-    <>
-      <div ref={quillElement}></div>
-    </>
+    <ReactQuill forwardedRef={quillRef} formats={formats} modules={modules} />
   );
-}
+};
 
-export default React.memo(QuillEditor);
+export default Editor;

@@ -3,6 +3,10 @@ import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import "react-quill/dist/quill.snow.css";
 import { imageUpload } from "@/util/imageUpload";
+import { useRouter } from "next/router";
+
+const DynamicQuill = dynamic(() => import("react-quill"), { ssr: false });
+const QuillResize = dynamic(() => import("quill-image-resize"), { ssr: false });
 
 const ReactQuill = dynamic(
   async () => {
@@ -24,12 +28,21 @@ const ReactQuill = dynamic(
           ["link", "image"],
           ["clean"],
         ],
+
         ImageResize: {
-          parchment: Quill.import("parchment"),
+          modules: ["Resize", "DisplaySize", "Toolbar"],
         },
       };
       return <RQ ref={forwardedRef} modules={modules} {...props} />;
     };
+  },
+  { ssr: false }
+);
+
+const ImageResize = dynamic(
+  async () => {
+    const { default: IR } = await import("quill-image-resize");
+    return IR;
   },
   { ssr: false }
 );
@@ -52,6 +65,8 @@ const formats = [
 ];
 
 const PublishPost = () => {
+  const quillRef = useRef();
+
   const {
     register,
     handleSubmit,
@@ -59,7 +74,6 @@ const PublishPost = () => {
     setValue,
     formState: { errors },
   } = useForm();
-  const quillRef = useRef();
 
   useEffect(() => {
     register("textContent", { required: true });
@@ -71,29 +85,26 @@ const PublishPost = () => {
 
   const textContent = watch("textContent");
 
-  const handlePublish = (data) => {
-    console.log(watch());
-    console.log(data);
-  };
-
   const imageHandler = () => {
-    const input = document.createElement("input");
+    if (quillRef) {
+      const input = document.createElement("input");
+      const quill = quillRef.current || undefined;
+      input.setAttribute("type", "file");
+      input.setAttribute("accept", "image/*");
+      document.body.appendChild(input);
 
-    input.setAttribute("type", "file");
-    input.setAttribute("accept", "image/*");
-    document.body.appendChild(input);
+      input.click();
 
-    input.click();
-
-    input.onchange = async () => {
-      const [file] = input.files;
-      const imageURL = await imageUpload(file);
-      console.log(imageURL);
-      const range = quillRef.current.getEditorSelection();
-      quillRef.current.getEditor().insertEmbed(range.index, "image", imageURL);
-      quillRef.current.getEditor().setSelection(range.index + 1);
-      document.body.querySelector(":scope > input").remove();
-    };
+      input.onchange = async () => {
+        const [file] = input.files;
+        const imageURL = await imageUpload(file);
+        console.log(imageURL);
+        const range = quill.getEditorSelection();
+        quill.getEditor().insertEmbed(range.index, "image", imageURL);
+        quill.getEditor().setSelection(range.index + 1);
+        document.body.querySelector(":scope > input").remove();
+      };
+    }
   };
 
   const modules = useMemo(
@@ -111,7 +122,9 @@ const PublishPost = () => {
           ["link", "image"],
           ["clean"],
         ],
-        handlers: { image: imageHandler },
+        handlers: {
+          image: imageHandler,
+        },
         ImageResize: {
           modules: ["Resize", "DisplaySize", "Toolbar"],
         },
@@ -119,6 +132,8 @@ const PublishPost = () => {
     }),
     []
   );
+
+  const handlePublish = async (data) => {};
 
   return (
     <div>
@@ -132,6 +147,7 @@ const PublishPost = () => {
             onChange={onEditorStateChange}
             value={textContent}
           />
+          <DynamicQuill />
         </div>
         <button>등록</button>
       </form>
