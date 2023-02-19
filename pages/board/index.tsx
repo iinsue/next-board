@@ -30,7 +30,7 @@ const BoardList = () => {
     <>
       <form onSubmit={handleSubmit(setSumbitData)}>
         <input {...register("postTitle")} />
-        <Editor />
+        <Editor value={null} />
         <button>Click</button>
       </form>
     </>

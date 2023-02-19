@@ -39,7 +39,7 @@ const registImage = async (formData: FormData) => {
   return response;
 };
 
-const Editor = () => {
+const Editor = ({ value }) => {
   const quillRef = useRef();
   const setContent = useSetRecoilState(postContent);
 
@@ -96,13 +96,26 @@ const Editor = () => {
   );
 
   return (
-    <ReactQuill
-      forwardedRef={quillRef}
-      formats={formats}
-      modules={modules}
-      placeholder="내용을 입력하세요..."
-      onChange={handleContent}
-    />
+    <>
+      {value ? (
+        <ReactQuill
+          forwardedRef={quillRef}
+          formats={formats}
+          modules={modules}
+          placeholder="내용을 입력하세요..."
+          onChange={handleContent}
+          value={value}
+        />
+      ) : (
+        <ReactQuill
+          forwardedRef={quillRef}
+          formats={formats}
+          modules={modules}
+          placeholder="내용을 입력하세요..."
+          onChange={handleContent}
+        />
+      )}
+    </>
   );
 };
 
