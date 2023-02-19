@@ -1,70 +1,26 @@
-import dynamic from "next/dynamic";
-import "react-quill/dist/quill.snow.css";
-import { useMemo, useRef } from "react";
-const ReactQuill = dynamic(async () => import("react-quill"), { ssr: false });
+const fetchImage = async (formData: FormData) => {
+  const response = await fetch("/api/upload", {
+    method: "POST",
+    body: formData,
+  });
+  return response;
+};
 
-const formats = [
-  "header",
-  "font",
-  "size",
-  "bold",
-  "italic",
-  "underline",
-  "strike",
-  "blockquote",
-  "list",
-  "bullet",
-  "indent",
-  "link",
-  "image",
-  "video",
-];
-
-const Editor = () => {
-  const quillRef = useRef();
-
-  const imageHandler = () => {
-    if (quillRef) {
-      const input = document.createElement("input");
-      const formData = new FormData();
-      let imgUrl = "";
-
-      input.setAttribute("type", "file");
-      input.setAttribute("accept", "image/*");
-      input.click();
-      input.onchange = async () => {
-        const file = input.files;
-        console.log(file[0]);
-      };
-    }
+const TextPost = () => {
+  const handleChange = async (e) => {
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+    const result = await fetchImage(formData);
+    const json = await result.json();
+    console.log(json.imageUrl);
   };
-
-  const modules = useMemo(
-    () => ({
-      toolbar: {
-        container: [
-          [{ header: [1, 2, false] }],
-          ["bold", "italic", "underline", "strike", "blockquote"],
-          [
-            { list: "ordered" },
-            { list: "bullet" },
-            { indent: "-1" },
-            { indent: "+1" },
-          ],
-          ["link", "image"],
-          ["clean"],
-        ],
-        handlers: {
-          image: imageHandler,
-        },
-      },
-    }),
-    []
-  );
-
   return (
-    <ReactQuill forwardedRef={quillRef} formats={formats} modules={modules} />
+    <div>
+      <h1>TextPost</h1>
+      <input type="file" onChange={handleChange} />
+    </div>
   );
 };
 
-export default Editor;
+export default TextPost;
