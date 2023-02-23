@@ -6,13 +6,14 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const data = JSON.parse(req.body);
-  const { postIdx } = data;
+  const { postId } = data;
   const { postTitle } = data;
+  console.log(postId);
   const postContent = JSON.stringify(data.postContent);
   try {
     await client.board.update({
       where: {
-        postIdx: postIdx,
+        postIdx: postId,
       },
       data: {
         postTitle: postTitle,

@@ -1,8 +1,6 @@
 import dynamic from "next/dynamic";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import "react-quill/dist/quill.snow.css";
-import { useMemo, useRef } from "react";
-import { useSetRecoilState } from "recoil";
-import { postContent } from "./atom";
 
 const ReactQuill = dynamic(
   async () => {
@@ -30,30 +28,21 @@ const formats = [
   "image",
 ];
 
-/**
- * 게시글에 삽입될 이미지 URL 을 요청하는 API
- */
-const registImage = async (formData: FormData) => {
-  const response = await fetch("/api/images", {
-    method: "POST",
-    body: formData,
-  });
-  return response;
-};
-
-const Editor = ({ value }) => {
+const TextEditor = (props: any) => {
   const quillRef = useRef();
-  const setContent = useSetRecoilState(postContent);
+  const setImage = props.setImage;
+  const setContent = props.setContent;
+  const content = props.content;
 
-  const handleContent = (content: string) => {
+  const handleContents = (contents: string) => {
     if (quillRef.current) {
       const quill = quillRef.current as any;
-      const delta = quill.unprivilegedEditor.getContents(content);
+      const delta = quill.unprivilegedEditor.getContents(contents);
       setContent(() => delta);
     }
   };
 
-  const imageHandler = () => {
+  const imageHandler = useCallback(() => {
     if (quillRef.current) {
       const quill = quillRef.current as any;
       const input = document.createElement("input");
@@ -65,14 +54,21 @@ const Editor = ({ value }) => {
         const formData = new FormData();
         const file = input.files;
         formData.append("file", file[0]);
-        const response = await registImage(formData);
+        const response = await setImage(formData);
         const { imageUrl } = await response.json();
-        const range = quill.getEditorSelection();
-        quill.getEditor().insertEmbed(range.index, "image", imageUrl);
-        quill.getEditor().setSelection(range.index + 1);
+        const editorRange = quill.getEditorSelection();
+        quill.getEditor().insertEmbed(editorRange.index, "image", imageUrl);
+        quill.getEditor().setSelection(editorRange.index + 1);
       };
     }
-  };
+  }, [setImage]);
+
+  useEffect(() => {
+    if (content && quillRef.current) {
+      const quill = quillRef.current as any;
+      quill.editor.clipboard.dangerouslyPasteHTML(content);
+    }
+  }, [content]);
 
   const modules = useMemo(
     () => ({
@@ -94,31 +90,19 @@ const Editor = ({ value }) => {
         },
       },
     }),
-    []
+    [imageHandler]
   );
-
   return (
     <>
-      {value ? (
-        <ReactQuill
-          forwardedRef={quillRef}
-          formats={formats}
-          modules={modules}
-          placeholder="내용을 입력하세요..."
-          onChange={handleContent}
-          value={value}
-        />
-      ) : (
-        <ReactQuill
-          forwardedRef={quillRef}
-          formats={formats}
-          modules={modules}
-          placeholder="내용을 입력하세요..."
-          onChange={handleContent}
-        />
-      )}
+      <ReactQuill
+        forwardedRef={quillRef}
+        formats={formats}
+        modules={modules}
+        placeholder="내용을 입력하세요..."
+        onChange={handleContents}
+      />
     </>
   );
 };
 
-export default Editor;
+export default TextEditor;

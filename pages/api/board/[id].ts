@@ -5,7 +5,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const textIdx = parseInt(req.query.idx as string);
+  const textIdx = parseInt(req.query.id as string);
   try {
     const data = await client.board.findMany({
       where: {

@@ -13,6 +13,6 @@ datasource db {
 model Board {
   postIdx     Int      @id @default(autoincrement())
   postTitle   String
-  postContent String
+  postContent String? @db.LongText
   regDate     DateTime @default(now())
 }

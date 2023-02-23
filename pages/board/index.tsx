@@ -1,39 +1,41 @@
-import { postContent } from "@/components/atom";
-import Editor from "@/components/textEditor";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { useRecoilValue } from "recoil";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
-const registerPost = async (data) => {
-  const response = await fetch("/api/register", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-  return response;
+const fetchList = async () => {
+  const response = await fetch("/api/board");
+  const json = await response.json();
+  return json;
 };
 
 const BoardList = () => {
-  const { register, setValue, handleSubmit } = useForm();
-  const postContents = useRecoilValue(postContent);
-  const setSumbitData = async (data) => {
-    console.log(typeof data.postContent);
-    console.log(JSON.stringify(data.postContent));
-    console.log(typeof JSON.stringify(data.postContent));
-    await registerPost(data).then((res) => console.log(res.json()));
-  };
-
+  const [list, setList] = useState([]);
+  const router = useRouter();
   useEffect(() => {
-    setValue("postContent", postContents);
-  }, [postContents, setValue]);
+    fetchList().then((res) => setList(() => res.postList));
+  }, []);
 
   return (
-    <>
-      <form onSubmit={handleSubmit(setSumbitData)}>
-        <input {...register("postTitle")} />
-        <Editor value={null} />
-        <button>Click</button>
-      </form>
-    </>
+    <div>
+      <h1>글 목록</h1>
+      <div>
+        <Link href="/board/register">등록하기</Link>
+      </div>
+      {list.length > 0 ? (
+        <div>
+          {list.map((item) => (
+            <div
+              key={item.postIdx}
+              onClick={() => router.replace(`/board/${item.postIdx}`)}
+            >
+              <div>{item.postTitle}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div>Loading...</div>
+      )}
+    </div>
   );
 };
 
