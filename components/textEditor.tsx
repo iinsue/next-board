@@ -28,9 +28,11 @@ const formats = [
   "indent",
   "link",
   "image",
-  "video",
 ];
 
+/**
+ * 게시글에 삽입될 이미지 URL 을 요청하는 API
+ */
 const registImage = async (formData: FormData) => {
   const response = await fetch("/api/images", {
     method: "POST",
