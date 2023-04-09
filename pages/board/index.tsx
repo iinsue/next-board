@@ -1,17 +1,37 @@
+import Test from "@/components/Test";
+import { postList as listatom } from "@/components/board/atom";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { useRecoilState, useRecoilValue } from "recoil";
 
-const fetchList = async () => {
+export const fetchList = async () => {
   const response = await fetch("/api/board");
   const json = await response.json();
   return json;
 };
 
+function useFetchList(setData) {
+  return useQuery({
+    queryKey: ["list"],
+    queryFn: fetchList,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+    staleTime: 1000 * 20,
+    onSuccess(data) {
+      setData(() => data.postList);
+    },
+  });
+}
+
 const BoardList = () => {
   const [isCheckAll, setIsCheckAll] = useState(false);
   const [isCheck, setIsCheck] = useState([]);
   const [list, setList] = useState([]);
+  const [textList, setTextList] = useRecoilState(listatom);
+  const { data } = useFetchList(setTextList);
 
   const router = useRouter();
   useEffect(() => {
@@ -47,7 +67,7 @@ const BoardList = () => {
         <Link href="/board/register">등록하기</Link>
         <div onClick={view}>view</div>
       </div>
-      {list.length > 0 ? (
+      {data?.postList.length > 0 ? (
         <div>
           <label style={{ display: "flex" }}>
             <input
@@ -59,7 +79,7 @@ const BoardList = () => {
             />
             <div>전체 선택</div>
           </label>
-          {list.map((item) => (
+          {data?.postList.map((item) => (
             <div key={item.postIdx} style={{ display: "flex" }}>
               <input
                 type="checkbox"
@@ -76,6 +96,7 @@ const BoardList = () => {
       ) : (
         <div>Loading...</div>
       )}
+      <Test />
     </div>
   );
 };
