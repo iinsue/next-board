@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -35,6 +36,16 @@ const PostDetail = () => {
         });
     }
   }, [router]);
+
+  const { data } = useQuery({
+    queryKey: ["detail"],
+    queryFn: () => fetchPost(router.query.id),
+    staleTime: 1000 * 20,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+    enabled: !!router.query.id,
+  });
 
   useEffect(() => {
     if (page.postContent !== "") {
