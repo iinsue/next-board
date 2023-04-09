@@ -30,9 +30,7 @@ const formats = [
 
 const TextEditor = (props: any) => {
   const quillRef = useRef();
-  const setImage = props.setImage;
-  const setContent = props.setContent;
-  const content = props.content;
+  const { setImage, setContent, content } = props;
 
   const handleContents = (contents: string) => {
     if (quillRef.current) {

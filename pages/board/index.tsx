@@ -49,15 +49,18 @@ const BoardList = () => {
       </div>
       {list.length > 0 ? (
         <div>
-          <input
-            type="checkbox"
-            name="selectAll"
-            id="selectAll"
-            onChange={handleSelectAll}
-            checked={isCheckAll}
-          />
+          <label style={{ display: "flex" }}>
+            <input
+              type="checkbox"
+              name="selectAll"
+              id="selectAll"
+              onChange={handleSelectAll}
+              checked={isCheckAll}
+            />
+            <div>전체 선택</div>
+          </label>
           {list.map((item) => (
-            <div key={item.postIdx}>
+            <div key={item.postIdx} style={{ display: "flex" }}>
               <input
                 type="checkbox"
                 id={item.postIdx}
