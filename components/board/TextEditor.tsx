@@ -26,17 +26,22 @@ const formats = [
   "indent",
   "link",
   "image",
+  "align",
 ];
 
 const TextEditor = (props: any) => {
   const quillRef = useRef();
-  const { setImage, setContent, content } = props;
+  const { setImage, setContent, content, height, width } = props;
 
   const handleContents = (contents: string) => {
     if (quillRef.current) {
       const quill = quillRef.current as any;
-      const delta = quill.unprivilegedEditor.getContents(contents);
-      setContent(() => delta);
+      const delta = quill.unprivilegedEditor.getContents();
+      if (contents === "<p><br></p>") {
+        setContent(() => null);
+      } else {
+        setContent(() => delta);
+      }
     }
   };
 
@@ -74,14 +79,14 @@ const TextEditor = (props: any) => {
         container: [
           [{ header: [1, 2, false] }],
           ["bold", "italic", "underline", "strike", "blockquote"],
+          ["link", "image", { align: ["", "center", "right"] }],
           [
             { list: "ordered" },
             { list: "bullet" },
             { indent: "-1" },
             { indent: "+1" },
+            "clean",
           ],
-          ["link", "image"],
-          ["clean"],
         ],
         handlers: {
           image: imageHandler,
@@ -98,9 +103,17 @@ const TextEditor = (props: any) => {
         modules={modules}
         placeholder="내용을 입력하세요..."
         onChange={handleContents}
+        style={{ width: `${width}px`, height: `${height}px` }}
       />
     </>
   );
 };
 
 export default TextEditor;
+
+const Quill = typeof window === "object" ? require("quill") : () => false;
+export const deltaToHTML = (inputDelta) => {
+  const quill = new Quill(document.createElement("div"));
+  quill.setContents(inputDelta);
+  return quill.root.innerHTML;
+};
