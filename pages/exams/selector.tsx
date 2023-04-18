@@ -1,9 +1,9 @@
 import { useRecoilValueLoadable } from "recoil";
 import { postSelector } from "../../components/atom";
+import { Suspense, useEffect, useState } from "react";
 
 const PostList = (props) => {
   const { data } = props;
-  console.log(data);
   return (
     <>
       {data.map((item) => (
@@ -17,14 +17,29 @@ const PostList = (props) => {
 
 export const TestSelector = () => {
   const selectedPost = useRecoilValueLoadable(postSelector);
+  const [isLoading, setIsLoading] = useState(true);
 
-  switch (selectedPost.state) {
-    case "hasValue":
-      return <PostList data={selectedPost.contents.postList} />;
-    case "loading":
-      return <div>Loading...</div>;
-    case "hasError":
-      throw selectedPost.contents;
+  useEffect(() => {
+    if (selectedPost) {
+      selectedPost.state === "hasValue" && setIsLoading(false);
+    }
+  }, [selectedPost]);
+
+  if (isLoading === false) {
+    switch (selectedPost.state) {
+      case "hasValue":
+        return (
+          <Suspense fallback={""}>
+            <PostList data={selectedPost.contents.postList} />
+          </Suspense>
+        );
+      case "loading":
+        return <div>Loading...</div>;
+      case "hasError":
+        throw selectedPost.contents;
+    }
+  } else {
+    return <div></div>;
   }
 };
 
